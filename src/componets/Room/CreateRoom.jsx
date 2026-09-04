@@ -62,8 +62,9 @@ const CreateRoom = () => {
       }
 
       const data = await response.json();
-      setRoomCode(data.roomCode || generateRoomCode());
-      setCreated(true);
+      const roomId = data.roomId;
+      // navigate to the room page
+      navigate(`/room/${roomId}`);
     } catch (err) {
       console.error("Create room error:", err);
       setError(err.message || "Failed to create room. Please try again.");

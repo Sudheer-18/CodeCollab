@@ -42,7 +42,7 @@ const SignUp = () => {
       }
 
       // API call to backend
-      const response = await fetch("http://localhost:8080/api/auth/signup", {
+      const response = await fetch("http://localhost:5000/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

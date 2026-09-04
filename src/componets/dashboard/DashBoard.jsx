@@ -9,6 +9,7 @@ const DashBoard = () => {
   const [stats, setStats] = useState({
     roomsCreated: 0,
     roomsJoined: 0,
+    totalParticipants: 0,
   });
   const [rooms, setRooms] = useState({
     created: [],
@@ -16,6 +17,9 @@ const DashBoard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [joinCode, setJoinCode] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
@@ -50,6 +54,7 @@ const DashBoard = () => {
       setStats({
         roomsCreated: data.roomsCreated || 0,
         roomsJoined: data.roomsJoined || 0,
+        totalParticipants: data.totalParticipants || 0,
       });
       setRooms({
         created: data.createdRooms || [],
@@ -67,6 +72,41 @@ const DashBoard = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
     navigate("/login");
+  };
+
+  const handleJoinRoom = async () => {
+    if (!joinCode.trim()) {
+      setJoinError("Enter a room code to join.");
+      return;
+    }
+
+    setJoinLoading(true);
+    setJoinError("");
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/api/rooms/join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ roomCode: joinCode.trim() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to join room");
+      }
+
+      const data = await response.json();
+      navigate(`/room/${data.roomId}`);
+    } catch (err) {
+      console.error("Dashboard join error:", err);
+      setJoinError(err.message || "Unable to join room");
+    } finally {
+      setJoinLoading(false);
+    }
   };
 
   if (loading) {
@@ -87,12 +127,21 @@ const DashBoard = () => {
           </p>
         </div>
         <div className="header-right">
-          <button className="btn-primary" onClick={() => navigate("/create-room")}>
-            Create New Room
-          </button>
-          <button className="btn-logout" onClick={handleLogout}>
-            Logout
-          </button>
+          <button className="btn-primary" onClick={() => navigate("/create-room")}>Create New Room</button>
+          <div className="header-join" style={{display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px'}}>
+            <input
+              type="text"
+              placeholder="Room code"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              disabled={joinLoading}
+              style={{padding: '6px 8px'}}
+            />
+            <button className="btn-primary" onClick={handleJoinRoom} disabled={joinLoading}>
+              {joinLoading ? "Joining..." : "Join"}
+            </button>
+          </div>
+          <button className="btn-logout" onClick={handleLogout}>Logout</button>
         </div>
       </header>
 
@@ -121,6 +170,13 @@ const DashBoard = () => {
             <div className="stat-content">
               <h3>{stats.roomsCreated + stats.roomsJoined}</h3>
               <p>Total Rooms</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon participants">🧑‍🤝‍🧑</div>
+            <div className="stat-content">
+              <h3>{stats.totalParticipants}</h3>
+              <p>Total Participants</p>
             </div>
           </div>
         </div>

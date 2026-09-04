@@ -1,9 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   return (
     <main className="home-page">
@@ -12,9 +30,15 @@ const HomePage = () => {
         <nav className="top-nav">
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
-          <a href="#dashboard">Dashboard</a>
           <a href="#about">About</a>
-          <button className="login-btn" onClick={() => navigate("/login")}>Login</button>
+          {user ? (
+            <>
+              <button className="login-btn" onClick={() => navigate("/dashboard")}>Dashboard</button>
+              <button className="login-btn" onClick={handleLogout}>Logout</button>
+            </>
+          ) : (
+            <button className="login-btn" onClick={() => navigate("/login")}>Login</button>
+          )}
         </nav>
       </header>
 
@@ -28,7 +52,7 @@ const HomePage = () => {
 
           <div className="hero-actions">
             <button className="primary-action" onClick={() => navigate("/create-room")}>Create Room</button>
-            <button className="secondary-action" onClick={() => navigate("/login")}>Join Room</button>
+            <button className="secondary-action" onClick={() => navigate("/join-room")}>Join Room</button>
           </div>
 
           <div className="hero-features" id="features">

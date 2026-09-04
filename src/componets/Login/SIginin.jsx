@@ -36,7 +36,7 @@ const SignIn = () => {
       }
 
       // API call to backend
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch("http://localhost:5000/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +44,6 @@ const SignIn = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          rememberMe: formData.rememberMe,
         }),
       });
 
@@ -57,18 +56,19 @@ const SignIn = () => {
       }
 
       setSuccess("Login successful! Redirecting...");
-      // Store token if provided
-      if (data.token) {
-        localStorage.setItem("authToken", data.token);
+
+      const tokenToStore = data.token || (data.user && data.user.id) || null;
+      if (tokenToStore) {
+        localStorage.setItem("authToken", tokenToStore);
       }
-      // Store user info
+
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
       setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+        navigate("/create-room");
+      }, 700);
     } catch (err) {
       setError(err.message || "An error occurred. Please try again.");
     } finally {
