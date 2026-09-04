@@ -17,9 +17,10 @@ const DashBoard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [joinCode, setJoinCode] = useState("");
-  const [joinLoading, setJoinLoading] = useState(false);
-  const [joinError, setJoinError] = useState("");
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
@@ -36,6 +37,7 @@ const DashBoard = () => {
       }
 
       setUser(userData);
+      setProfileName(userData?.fullName || "");
 
       // Fetch user stats and rooms from backend
       const response = await fetch("http://localhost:5000/api/dashboard/stats", {
@@ -68,45 +70,45 @@ const DashBoard = () => {
     }
   };
 
+  const handleProfileSave = async (event) => {
+    event.preventDefault();
+    if (!profileName.trim()) {
+      setProfileMessage("Enter your name before saving.");
+      return;
+    }
+
+    setProfileLoading(true);
+    setProfileMessage("");
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/users/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ fullName: profileName.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to update profile");
+      }
+
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setEditingProfile(false);
+      setProfileMessage("Profile updated.");
+    } catch (err) {
+      setProfileMessage(err.message || "Unable to update profile");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
     navigate("/login");
-  };
-
-  const handleJoinRoom = async () => {
-    if (!joinCode.trim()) {
-      setJoinError("Enter a room code to join.");
-      return;
-    }
-
-    setJoinLoading(true);
-    setJoinError("");
-
-    try {
-      const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/api/rooms/join", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({ roomCode: joinCode.trim() }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to join room");
-      }
-
-      const data = await response.json();
-      navigate(`/room/${data.roomId}`);
-    } catch (err) {
-      console.error("Dashboard join error:", err);
-      setJoinError(err.message || "Unable to join room");
-    } finally {
-      setJoinLoading(false);
-    }
   };
 
   if (loading) {
@@ -127,20 +129,8 @@ const DashBoard = () => {
           </p>
         </div>
         <div className="header-right">
-          <button className="btn-primary" onClick={() => navigate("/create-room")}>Create New Room</button>
-          <div className="header-join" style={{display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px'}}>
-            <input
-              type="text"
-              placeholder="Room code"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              disabled={joinLoading}
-              style={{padding: '6px 8px'}}
-            />
-            <button className="btn-primary" onClick={handleJoinRoom} disabled={joinLoading}>
-              {joinLoading ? "Joining..." : "Join"}
-            </button>
-          </div>
+          <button className="btn-primary" onClick={() => navigate("/create-room")}>Create Room</button>
+          <button className="btn-secondary" onClick={() => navigate("/join-room")}>Join Room</button>
           <button className="btn-logout" onClick={handleLogout}>Logout</button>
         </div>
       </header>
@@ -148,6 +138,37 @@ const DashBoard = () => {
       {error && <div className="alert error">{error}</div>}
 
       <div className="dashboard-content">
+        <section className="profile-section">
+          <div className="profile-heading">
+            <div className="profile-avatar">{(user?.fullName || "U").charAt(0).toUpperCase()}</div>
+            <div>
+              <p className="section-kicker">Your account</p>
+              <h2>{user?.fullName || "User"}</h2>
+              <p>{user?.email || "No email available"}</p>
+            </div>
+          </div>
+          <div className="profile-actions">
+            {editingProfile ? (
+              <form className="profile-form" onSubmit={handleProfileSave}>
+                <input
+                  value={profileName}
+                  onChange={(event) => setProfileName(event.target.value)}
+                  aria-label="Full name"
+                  placeholder="Full name"
+                  maxLength="80"
+                />
+                <button className="btn-primary" type="submit" disabled={profileLoading}>
+                  {profileLoading ? "Saving..." : "Save name"}
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => setEditingProfile(false)}>Cancel</button>
+              </form>
+            ) : (
+              <button className="btn-secondary" onClick={() => setEditingProfile(true)}>Edit profile</button>
+            )}
+            {profileMessage && <span className="profile-message">{profileMessage}</span>}
+          </div>
+        </section>
+
         <div className="stats-section">
           <div className="stat-card">
             <div className="stat-icon created">📁</div>

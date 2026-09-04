@@ -42,6 +42,7 @@
 }
 
 .btn-primary,
+.btn-secondary,
 .btn-logout,
 .btn-enter {
   border: none;
@@ -57,6 +58,18 @@
   color: #fff;
   padding: 14px 26px;
   font-size: 0.96rem;
+}
+
+.btn-secondary {
+  background: #eef0ff;
+  color: #4b3ed5;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  background: #e1e4ff;
 }
 
 .btn-primary:hover,
@@ -95,6 +108,79 @@
 .dashboard-content {
   max-width: 1240px;
   margin: 0 auto;
+}
+
+.profile-section {
+  background: #ffffff;
+  border: 1px solid rgba(93, 77, 252, 0.12);
+  border-radius: 24px;
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: 0 18px 60px rgba(56, 40, 141, 0.1);
+}
+
+.profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: #5d4dfc;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.section-kicker {
+  color: #5d4dfc;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.profile-heading h2 {
+  color: #1a2144;
+  font-size: 1.25rem;
+  margin: 2px 0;
+}
+
+.profile-heading p:last-child,
+.profile-message {
+  color: #5f6289;
+  font-size: 0.9rem;
+}
+
+.profile-actions,
+.profile-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-form input {
+  min-width: 220px;
+  border: 1px solid rgba(93, 77, 252, 0.2);
+  border-radius: 12px;
+  padding: 11px 13px;
+  color: #252b50;
+  outline: none;
+}
+
+.profile-form input:focus {
+  border-color: #5d4dfc;
+  box-shadow: 0 0 0 3px rgba(93, 77, 252, 0.12);
 }
 
 .stats-section {
@@ -262,6 +348,22 @@
 
   .dashboard-header {
     margin-bottom: 24px;
+  }
+
+  .profile-section {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .profile-actions,
+  .profile-form {
+    width: 100%;
+  }
+
+  .profile-form input {
+    min-width: 0;
+    width: 100%;
   }
 
   .stats-section {

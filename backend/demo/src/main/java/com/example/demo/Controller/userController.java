@@ -355,6 +355,30 @@ public class userController {
         return ResponseEntity.ok(user);
     }
 
+    @PatchMapping("/users/profile")
+    public ResponseEntity<Map<String, Object>> updateProfile(@RequestBody Map<String, String> profile,
+                                                               @RequestHeader(value = "Authorization", required = false) String authorization) {
+        User authenticatedUser = authenticatedUser(authorization);
+        Map<String, Object> response = new HashMap<>();
+        if (authenticatedUser == null) {
+            response.put("message", "Please log in before editing your profile");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String fullName = profile.get("fullName");
+        if (fullName == null || fullName.isBlank()) {
+            response.put("message", "Full name is required");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        authenticatedUser.setFullName(fullName.trim());
+        User savedUser = userService.saveUser(authenticatedUser);
+        response.put("success", true);
+        response.put("message", "Profile updated successfully");
+        response.put("user", savedUser);
+        return ResponseEntity.ok(response);
+    }
+
     @PatchMapping("/api/rooms/{roomId}/content")
     public ResponseEntity<Map<String, Object>> saveRoomContent(@PathVariable String roomId,
                                                                @RequestBody Map<String, String> contentPayload,

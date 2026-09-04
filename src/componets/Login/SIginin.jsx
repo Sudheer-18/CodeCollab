@@ -67,7 +67,7 @@ const SignIn = () => {
       }
 
       setTimeout(() => {
-        navigate("/create-room");
+        navigate("/dashboard");
       }, 700);
     } catch (err) {
       setError(err.message || "An error occurred. Please try again.");
