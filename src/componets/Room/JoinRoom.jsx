@@ -11,6 +11,11 @@ const JoinRoom = () => {
   const [recentRooms, setRecentRooms] = useState([]);
 
   useEffect(() => {
+    if (!localStorage.getItem("authToken")) {
+      navigate("/login");
+      return;
+    }
+
     // Load recent rooms from localStorage (if any)
     const recent = localStorage.getItem("recentRoomCodes");
     if (recent) {
@@ -110,15 +115,6 @@ const JoinRoom = () => {
             disabled={loading}
           >
             {loading ? "Joining..." : "Join Room"}
-          </button>
-
-          <div className="divider">OR</div>
-
-          <button
-            className="btn-secondary"
-            onClick={() => navigate("/create-room")}
-          >
-            Create a New Room
           </button>
 
           {recentRooms.length > 0 && (
