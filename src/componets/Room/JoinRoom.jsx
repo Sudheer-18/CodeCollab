@@ -21,7 +21,7 @@ const JoinRoom = () => {
     if (recent) {
       setRecentRooms(JSON.parse(recent));
     }
-  }, []);
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     setRoomCode(e.target.value.toUpperCase());

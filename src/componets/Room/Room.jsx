@@ -27,6 +27,10 @@ const Room = () => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [socketError, setSocketError] = useState("");
   const [viewMode, setViewMode] = useState("editor");
+  const [runLoading, setRunLoading] = useState(false);
+  const [runError, setRunError] = useState("");
+  const [runResult, setRunResult] = useState(null);
+  const [stdin, setStdin] = useState("");
 
   const fetchRoom = async () => {
     try {
@@ -225,6 +229,37 @@ const Room = () => {
     }
   };
 
+  const handleRunCode = async () => {
+    setRunLoading(true);
+    setRunError("");
+    setRunResult(null);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:5000/api/code/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          language: room.language,
+          code: editorText,
+          stdin,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to run code");
+      }
+      setRunResult(data);
+    } catch (err) {
+      setRunError(err.message || "Unable to run code");
+    } finally {
+      setRunLoading(false);
+    }
+  };
+
   const handleJoinVideo = () => {
     if (!room) return;
     const active = room.activeVideoCall || room.videoCall || null;
@@ -256,8 +291,8 @@ const Room = () => {
             <h1>Room code: {room.roomCode}</h1>
             <p>Language: {room.language}</p>
           </div>
-          <button className="ghost-button" type="button" onClick={() => navigate(-1)}>
-            Back
+          <button className="ghost-button" type="button" onClick={() => navigate("/", { replace: true })}>
+            Exit Room
           </button>
         </div>
 
@@ -283,12 +318,47 @@ const Room = () => {
                     </div>
                   </div>
                 )}
+                <div className="editor-toolbar">
+                  <div>
+                    <strong>{room.language}</strong>
+                    <span>Run this room's code in a sandbox</span>
+                  </div>
+                  <button className="submit-button run-code-button" onClick={handleRunCode} disabled={runLoading}>
+                    {runLoading ? "Running..." : "Run Code"}
+                  </button>
+                </div>
                 <textarea
                   value={editorText}
                   onChange={handleEditorChange}
                   placeholder="Type code here..."
                   className="code-editor"
                 />
+                <label className="stdin-field">
+                  Program input (optional)
+                  <textarea
+                    value={stdin}
+                    onChange={(event) => setStdin(event.target.value)}
+                    placeholder="Input passed to your program"
+                    rows="3"
+                  />
+                </label>
+                {runError && <div className="run-output error">{runError}</div>}
+                {runResult && (
+                  <div className="run-output">
+                    <div className="run-output-header">
+                      <strong>Execution result</strong>
+                      <span>Exit code: {runResult.run?.code ?? runResult.compile?.code ?? "-"}</span>
+                    </div>
+                    {runResult.compile?.stderr && (
+                      <pre className="run-stderr">{runResult.compile.stderr}</pre>
+                    )}
+                    {runResult.run?.stdout && <pre>{runResult.run.stdout}</pre>}
+                    {runResult.run?.stderr && <pre className="run-stderr">{runResult.run.stderr}</pre>}
+                    {!runResult.compile?.stderr && !runResult.run?.stdout && !runResult.run?.stderr && (
+                      <pre className="run-empty">Program finished without output.</pre>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="history-pane history-page">

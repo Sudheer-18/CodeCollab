@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Signin.css";
 
@@ -12,6 +12,12 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (localStorage.getItem("authToken") && localStorage.getItem("user")) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -67,7 +73,7 @@ const SignIn = () => {
       }
 
       setTimeout(() => {
-        navigate("/join-room");
+        navigate("/");
       }, 700);
     } catch (err) {
       setError(err.message || "An error occurred. Please try again.");

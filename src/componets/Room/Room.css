@@ -100,6 +100,93 @@
   gap: 16px;
 }
 
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 2px;
+}
+
+.editor-toolbar strong,
+.editor-toolbar span {
+  display: block;
+}
+
+.editor-toolbar strong {
+  color: #1f224b;
+}
+
+.editor-toolbar span {
+  margin-top: 4px;
+  color: #5f6289;
+  font-size: 0.86rem;
+}
+
+.run-code-button {
+  width: auto;
+  min-width: 130px;
+}
+
+.stdin-field {
+  display: grid;
+  gap: 8px;
+  color: #1f224b;
+  font-weight: 700;
+}
+
+.stdin-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgba(93, 77, 252, 0.18);
+  border-radius: 14px;
+  background: #f7f6ff;
+  color: #1f1f3d;
+  font: inherit;
+  resize: vertical;
+}
+
+.run-output {
+  overflow: hidden;
+  border: 1px solid rgba(93, 77, 252, 0.14);
+  border-radius: 16px;
+  background: #11152a;
+  color: #e6eef9;
+}
+
+.run-output.error {
+  padding: 16px;
+  background: #fff1f3;
+  color: #b42345;
+  border-color: rgba(216, 68, 102, 0.22);
+}
+
+.run-output-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.run-output pre {
+  margin: 0;
+  padding: 16px;
+  min-height: 44px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  font: 0.9rem/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.run-output .run-stderr {
+  color: #ff9eae;
+}
+
+.run-output .run-empty {
+  color: #aeb8d0;
+}
+
 .code-editor {
   width: 100%;
   min-height: 62vh;

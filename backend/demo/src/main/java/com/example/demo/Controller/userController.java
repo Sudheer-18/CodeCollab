@@ -26,6 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.time.Instant;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -377,6 +385,106 @@ public class userController {
         response.put("message", "Profile updated successfully");
         response.put("user", savedUser);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/code/execute")
+    public ResponseEntity<Map<String, Object>> executeCode(@RequestBody Map<String, String> codePayload,
+                                                            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        Map<String, Object> response = new HashMap<>();
+        if (authenticatedUser(authorization) == null) {
+            response.put("message", "Please log in before running code");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String language = codePayload.get("language");
+        String code = codePayload.get("code");
+        String stdin = codePayload.getOrDefault("stdin", "");
+        Map<String, String> runtime = runtimeFor(language);
+
+        if (runtime == null) {
+            response.put("message", "Unsupported language. Choose JavaScript, TypeScript, Python, Java, or Go.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (code == null || code.isBlank()) {
+            response.put("message", "Write some code before running it");
+            return ResponseEntity.badRequest().body(response);
+        }
+        if (code.length() > 20000 || stdin.length() > 5000) {
+            response.put("message", "Code is limited to 20,000 characters and input to 5,000 characters");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("source_code", code);
+            requestBody.put("language_id", Integer.parseInt(runtime.get("languageId")));
+            requestBody.put("stdin", stdin);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://ce.judge0.com/submissions?base64_encoded=false&wait=true"))
+                    .timeout(Duration.ofSeconds(25))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody), StandardCharsets.UTF_8))
+                    .build();
+            HttpResponse<String> execution = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofString());
+
+            Map<String, Object> judgeResult = objectMapper.readValue(execution.body(), Map.class);
+            if (execution.statusCode() >= 400) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(judgeResult);
+            }
+
+            Map<String, Object> run = new HashMap<>();
+            run.put("stdout", judgeResult.get("stdout"));
+            run.put("stderr", judgeResult.get("stderr"));
+            run.put("code", judgeResult.get("exit_code"));
+
+            Map<String, Object> normalizedResult = new HashMap<>();
+            normalizedResult.put("language", language);
+            normalizedResult.put("run", run);
+            normalizedResult.put("status", judgeResult.get("status"));
+            if (judgeResult.get("compile_output") != null) {
+                Map<String, Object> compile = new HashMap<>();
+                compile.put("stderr", judgeResult.get("compile_output"));
+                normalizedResult.put("compile", compile);
+            }
+            return ResponseEntity.ok(normalizedResult);
+        } catch (Exception exception) {
+            response.put("message", "The code runner is unavailable right now");
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
+        }
+    }
+
+    private Map<String, String> runtimeFor(String language) {
+        if (language == null) {
+            return null;
+        }
+
+        Map<String, String> runtime = new HashMap<>();
+        switch (language.trim().toLowerCase()) {
+            case "javascript" -> {
+                runtime.put("languageId", "63");
+            }
+            case "typescript" -> {
+                runtime.put("languageId", "74");
+            }
+            case "python" -> {
+                runtime.put("languageId", "71");
+            }
+            case "java" -> {
+                runtime.put("languageId", "62");
+            }
+            case "go" -> {
+                runtime.put("languageId", "60");
+            }
+            default -> {
+                return null;
+            }
+        }
+        return runtime;
     }
 
     @PatchMapping("/api/rooms/{roomId}/content")

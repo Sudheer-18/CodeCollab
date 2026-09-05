@@ -7,20 +7,24 @@ const HomePage = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem("authToken");
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    if (token && storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (error) {
         localStorage.removeItem("user");
       }
+    } else {
+      setUser(null);
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
-    navigate("/login");
+    setUser(null);
+    navigate("/", { replace: true });
   };
 
   return (
