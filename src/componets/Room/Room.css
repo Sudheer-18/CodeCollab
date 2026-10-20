@@ -73,6 +73,19 @@
   padding: 24px 16px;
 }
 
+.room-connection {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+}
+
+.room-connection.is-connected {
+  color: #16804a;
+}
+
+.room-connection.is-disconnected {
+  color: #a45119;
+}
+
 .editor-pane {
   min-height: 72vh;
   display: grid;

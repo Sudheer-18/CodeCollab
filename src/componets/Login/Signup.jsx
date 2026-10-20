@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Signup.css";
+import { API_BASE_URL } from "../../api.js";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const SignUp = () => {
       }
 
       // API call to backend
-      const response = await fetch("http://localhost:5000/users/add", {
+      const response = await fetch(`${API_BASE_URL}/users/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./JoinRoom.css";
+import { API_BASE_URL } from "../../api.js";
 
 const JoinRoom = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const JoinRoom = () => {
       const token = localStorage.getItem("authToken");
 
       // Call backend API to join room
-      const response = await fetch("http://localhost:5000/api/rooms/join", {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

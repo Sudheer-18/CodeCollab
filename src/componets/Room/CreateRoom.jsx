@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CreateRoom.css";
+import { API_BASE_URL } from "../../api.js";
 
 const CreateRoom = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const CreateRoom = () => {
       }
 
       // API call to backend to create room
-      const response = await fetch("http://localhost:5000/api/rooms/create", {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

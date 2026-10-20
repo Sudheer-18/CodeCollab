@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./DashBoard.css";
+import { API_BASE_URL } from "../../api.js";
 
 const DashBoard = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const DashBoard = () => {
       setProfileName(userData?.fullName || "");
 
       // Fetch user stats and rooms from backend
-      const response = await fetch("http://localhost:5000/api/dashboard/stats", {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +82,7 @@ const DashBoard = () => {
     setProfileMessage("");
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/users/profile", {
+      const response = await fetch(`${API_BASE_URL}/users/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

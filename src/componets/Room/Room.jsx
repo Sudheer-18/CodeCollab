@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./Room.css";
 import "./CreateRoom.css";
-import { io as socketIOClient } from "socket.io-client";
+import { Client } from "@stomp/stompjs";
+import { API_BASE_URL, WS_BASE_URL } from "../../api.js";
 
 const Room = () => {
   const { id } = useParams();
@@ -35,7 +36,7 @@ const Room = () => {
   const fetchRoom = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const res = await fetch(`http://localhost:5000/api/rooms/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/rooms/${id}`, {
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -80,58 +81,65 @@ const Room = () => {
   useEffect(() => {
     // initial fetch once; further updates come from socket events
     fetchRoom();
-    // connect socket
+    // Connect to Spring's STOMP endpoint using the current JWT.
     try {
-      socketRef.current = socketIOClient(process.env.REACT_APP_SOCKET_URL || "http://localhost:5001");
-      socketRef.current.on("connect", () => {
-        setSocketConnected(true);
-        setSocketError("");
-        const userId = localStorage.getItem("authToken") || null;
-        socketRef.current.emit("joinRoom", { roomId: id, userId });
+      const token = localStorage.getItem("authToken");
+      const client = new Client({
+        brokerURL: `${WS_BASE_URL}/ws`,
+        connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+        reconnectDelay: 5000,
+        onConnect: () => {
+          setSocketConnected(true);
+          setSocketError("");
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          client.subscribe(`/topic/rooms/${id}/editor`, (message) => {
+            const { content } = JSON.parse(message.body);
+            latestRemoteContent.current = content || "";
+            if (!typingRef.current && !hasLocalEdit.current) {
+              setEditorText(latestRemoteContent.current);
+              editorTextRef.current = latestRemoteContent.current;
+              setRemoteAvailable(false);
+            } else if (latestRemoteContent.current !== editorTextRef.current) {
+              setRemoteAvailable(true);
+            }
+          });
+          client.subscribe(`/topic/rooms/${id}/restore`, (message) => {
+            const { content } = JSON.parse(message.body);
+            latestRemoteContent.current = content || "";
+            setEditorText(latestRemoteContent.current);
+            editorTextRef.current = latestRemoteContent.current;
+            localStorage.setItem(localKey, latestRemoteContent.current);
+            setRemoteAvailable(false);
+          });
+          client.subscribe(`/topic/rooms/${id}/participants`, (message) => {
+            const list = JSON.parse(message.body);
+            setRoom((current) => ({ ...(current || {}), participants: list, participantsCount: list.length }));
+          });
+          client.subscribe(`/topic/rooms/${id}/chat`, (message) => {
+            setMessages((current) => [...current, JSON.parse(message.body)]);
+          });
+          client.publish({ destination: `/app/rooms/${id}/join`, body: "{}" });
+        },
+        onWebSocketClose: () => {
+          setSocketConnected(false);
+          setSocketError("Socket connection failed; retrying");
+          if (!intervalRef.current) {
+            intervalRef.current = setInterval(() => fetchRoom(), 4000);
+          }
+        },
+        onStompError: () => {
+          setSocketError("Socket authentication failed. Please log in again.");
+        },
       });
-      socketRef.current.on("connect_error", (err) => {
-        console.warn("socket connect_error", err);
-        setSocketError("Socket connection failed");
-        setSocketConnected(false);
-        // start polling fallback
-        if (!intervalRef.current) {
-          intervalRef.current = setInterval(() => fetchRoom(), 4000);
-        }
-      });
+      socketRef.current = client;
+      client.activate();
     } catch (err) {
       console.error("socket init error", err);
       setSocketError("Socket init error");
       intervalRef.current = setInterval(() => fetchRoom(), 4000);
-    }
-
-    // Guard event registration in case socket initialization failed
-    if (socketRef.current) {
-      socketRef.current.on("remoteEditorChange", ({ content, author }) => {
-        latestRemoteContent.current = content || "";
-        if (!typingRef.current && !hasLocalEdit.current) {
-          setEditorText(latestRemoteContent.current);
-          editorTextRef.current = latestRemoteContent.current;
-          setRemoteAvailable(false);
-        } else if (latestRemoteContent.current !== editorTextRef.current) {
-          setRemoteAvailable(true);
-        }
-      });
-
-      socketRef.current.on("remoteEditorRestore", ({ content, author }) => {
-        latestRemoteContent.current = content || "";
-        setEditorText(latestRemoteContent.current);
-        editorTextRef.current = latestRemoteContent.current;
-        localStorage.setItem(localKey, latestRemoteContent.current);
-        setRemoteAvailable(false);
-      });
-
-      socketRef.current.on("participants", (list) => {
-        setRoom((r) => ({ ...(r || {}), participants: list, participantsCount: (list || []).length }));
-      });
-
-      socketRef.current.on("chatMessage", (msg) => {
-        setMessages((m) => [...m, msg]);
-      });
     }
 
     return () => {
@@ -139,8 +147,12 @@ const Room = () => {
       if (typingTimer.current) clearTimeout(typingTimer.current);
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       if (socketRef.current) {
-        try { socketRef.current.emit("leaveRoom"); } catch {}
-        try { socketRef.current.disconnect(); } catch {}
+        try {
+          if (socketRef.current.connected) {
+            socketRef.current.publish({ destination: `/app/rooms/${id}/leave`, body: "{}" });
+          }
+          socketRef.current.deactivate();
+        } catch {}
       }
     };
   }, [id]);
@@ -153,7 +165,7 @@ const Room = () => {
   const saveEditorContent = async (content) => {
     try {
       const token = localStorage.getItem("authToken");
-      const res = await fetch(`http://localhost:5000/api/rooms/${id}/content`, {
+      const res = await fetch(`${API_BASE_URL}/api/rooms/${id}/content`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -201,7 +213,10 @@ const Room = () => {
     saveTimeout.current = setTimeout(() => {
       saveEditorContent(value).then(() => {
         try {
-          socketRef.current && socketRef.current.emit("editorChange", { roomId: id, content: value, author: localStorage.getItem("authToken") || null });
+          socketRef.current?.connected && socketRef.current.publish({
+            destination: `/app/rooms/${id}/editor`,
+            body: JSON.stringify({ content: value }),
+          });
         } catch (e) {}
       });
     }, 1000);
@@ -210,7 +225,10 @@ const Room = () => {
     if (emitTimeout.current) clearTimeout(emitTimeout.current);
     emitTimeout.current = setTimeout(() => {
       try {
-        socketRef.current && socketRef.current.emit("editorChange", { roomId: id, content: value, author: localStorage.getItem("authToken") || null });
+        socketRef.current?.connected && socketRef.current.publish({
+          destination: `/app/rooms/${id}/editor`,
+          body: JSON.stringify({ content: value }),
+        });
       } catch (e) {}
     }, 300);
   };
@@ -218,11 +236,13 @@ const Room = () => {
   const sendChat = () => {
     const text = (newMessage || "").trim();
     if (!text) return;
-    const author = localStorage.getItem("authToken") || "anon";
-    const payload = { roomId: id, author, text };
+    const payload = { text };
     try {
-      socketRef.current && socketRef.current.emit("chatMessage", payload);
-      setMessages((m) => [...m, { author, text, at: new Date().toISOString() }]);
+      if (!socketRef.current?.connected) return;
+      socketRef.current.publish({
+        destination: `/app/rooms/${id}/chat`,
+        body: JSON.stringify(payload),
+      });
       setNewMessage("");
     } catch (e) {
       console.error(e);
@@ -236,7 +256,7 @@ const Room = () => {
 
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/api/code/execute", {
+      const response = await fetch(`${API_BASE_URL}/api/code/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -290,6 +310,9 @@ const Room = () => {
             <p className="eyebrow">{room.roomName}</p>
             <h1>Room code: {room.roomCode}</h1>
             <p>Language: {room.language}</p>
+            <p className={`room-connection ${socketConnected ? "is-connected" : "is-disconnected"}`} role="status">
+              {socketConnected ? "Live connection" : socketError || "Connecting to room..."}
+            </p>
           </div>
           <button className="ghost-button" type="button" onClick={() => navigate("/", { replace: true })}>
             Exit Room
@@ -392,7 +415,10 @@ const Room = () => {
                               setViewMode('editor');
                               try {
                                 await saveEditorContent(content);
-                                socketRef.current && socketRef.current.emit("restore", { roomId: id, content, author: localStorage.getItem("authToken") || null });
+                                socketRef.current?.connected && socketRef.current.publish({
+                                  destination: `/app/rooms/${id}/restore`,
+                                  body: JSON.stringify({ content }),
+                                });
                               } catch (err) {
                                 console.error(err);
                               }

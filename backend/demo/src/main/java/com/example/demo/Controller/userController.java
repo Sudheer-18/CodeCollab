@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.example.demo.Model.User;
+import com.example.demo.services.JwtService;
 import com.example.demo.services.UserSeeervice;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,6 +42,9 @@ public class userController {
 
     @Autowired
     private UserSeeervice userService;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -88,8 +92,7 @@ public class userController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // Use the user id as the token for this simple demo.
-        String token = user.getId();
+        String token = jwtService.issueToken(user.getId());
 
         response.put("success", true);
         response.put("message", "Login successful");
@@ -166,8 +169,8 @@ public class userController {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return null;
         }
-        String userId = authorization.substring(7).trim();
-        return userId.isEmpty() ? null : userService.findById(userId);
+        String userId = jwtService.getUserId(authorization.substring(7).trim());
+        return userId == null || userId.isEmpty() ? null : userService.findById(userId);
     }
 
     @PostMapping("/api/rooms/join")
@@ -191,8 +194,14 @@ public class userController {
 
 
         String userIdentifier = "guest";
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            userIdentifier = authorization.substring(7);
+        if (authorization != null) {
+            User joiningUser = authenticatedUser(authorization);
+            if (joiningUser == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("message", "Your session is invalid or expired. Please log in again.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+            userIdentifier = joiningUser.getId();
         }
 
         // participants are list of objects { userId, joinedAt }
@@ -258,10 +267,13 @@ public class userController {
 
     @org.springframework.web.bind.annotation.GetMapping("/api/dashboard/stats")
     public ResponseEntity<Map<String, Object>> dashboardStats(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        String userIdentifier = "guest";
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            userIdentifier = authorization.substring(7);
+        User dashboardUser = authenticatedUser(authorization);
+        if (dashboardUser == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Please log in to view dashboard statistics");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
+        String userIdentifier = dashboardUser.getId();
 
         // rooms created by this user
         Query createdQuery = new Query();
@@ -353,14 +365,17 @@ public class userController {
 
     @GetMapping("/users/{id}")
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable String id) {
-        Query q = new Query(Criteria.where("_id").is(id));
-        Map user = mongoTemplate.findOne(q, Map.class, "users");
+        User user = userService.findById(id);
         if (user == null) {
             Map<String, Object> error = new HashMap<>();
             error.put("message", "User not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
-        return ResponseEntity.ok(user);
+        Map<String, Object> safeUser = new HashMap<>();
+        safeUser.put("id", user.getId());
+        safeUser.put("fullName", user.getFullName());
+        safeUser.put("email", user.getEmail());
+        return ResponseEntity.ok(safeUser);
     }
 
     @PatchMapping("/users/profile")
@@ -491,6 +506,13 @@ public class userController {
     public ResponseEntity<Map<String, Object>> saveRoomContent(@PathVariable String roomId,
                                                                @RequestBody Map<String, String> contentPayload,
                                                                @RequestHeader(value = "Authorization", required = false) String authorization) {
+        User authenticatedUser = authenticatedUser(authorization);
+        if (authenticatedUser == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Please log in before saving room content");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
         String editorContent = contentPayload.get("editorContent");
         if (editorContent == null) {
             Map<String, Object> error = new HashMap<>();
@@ -507,10 +529,7 @@ public class userController {
         }
 
         // save editorContent and append a history entry with author and timestamp
-        String author = "anonymous";
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            author = authorization.substring(7);
-        }
+        String author = authenticatedUser.getId();
 
         Update update = new Update();
         update.set("editorContent", editorContent);

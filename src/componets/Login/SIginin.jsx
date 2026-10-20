@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Signin.css";
+import { API_BASE_URL } from "../../api.js";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const SignIn = () => {
       }
 
       // API call to backend
-      const response = await fetch("http://localhost:5000/users/login", {
+      const response = await fetch(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
