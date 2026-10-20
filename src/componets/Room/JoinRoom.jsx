@@ -30,6 +30,12 @@ const JoinRoom = () => {
   };
 
   const handleJoinRoom = async (code) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
     if (!code.trim()) {
       setError("Please enter a room code");
       return;
@@ -40,8 +46,6 @@ const JoinRoom = () => {
     setSuccess("");
 
     try {
-      const token = localStorage.getItem("authToken");
-
       // Call backend API to join room
       const response = await fetch(`${API_BASE_URL}/api/rooms/join`, {
         method: "POST",
@@ -53,6 +57,12 @@ const JoinRoom = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
+          navigate("/login", { replace: true });
+          return;
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to join room");
       }

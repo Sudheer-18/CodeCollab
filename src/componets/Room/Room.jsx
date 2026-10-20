@@ -36,6 +36,10 @@ const Room = () => {
   const fetchRoom = async () => {
     try {
       const token = localStorage.getItem("authToken");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
       const res = await fetch(`${API_BASE_URL}/api/rooms/${id}`, {
         headers: {
           "Content-Type": "application/json",
@@ -43,6 +47,16 @@ const Room = () => {
         },
       });
       if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
+          navigate("/login", { replace: true });
+          return;
+        }
+        if (res.status === 403) {
+          navigate("/join-room", { replace: true });
+          return;
+        }
         const err = await res.json();
         throw new Error(err.message || "Failed to load room");
       }

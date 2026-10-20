@@ -8,8 +8,6 @@ const CreateRoom = () => {
   const [roomName, setRoomName] = useState("");
   const [language, setLanguage] = useState("JavaScript");
   const [visibility, setVisibility] = useState("public");
-  const [roomCode, setRoomCode] = useState("");
-  const [created, setCreated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,11 +18,6 @@ const CreateRoom = () => {
       navigate("/login");
     }
   }, [navigate]);
-
-  const generateRoomCode = () => {
-    const prefix = roomName.trim().slice(0, 3).toUpperCase() || "CR";
-    return `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -58,6 +51,12 @@ const CreateRoom = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
+          navigate("/login", { replace: true });
+          return;
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to create room");
       }
@@ -69,9 +68,6 @@ const CreateRoom = () => {
     } catch (err) {
       console.error("Create room error:", err);
       setError(err.message || "Failed to create room. Please try again.");
-      // Still generate a room code for UI purposes
-      setRoomCode(generateRoomCode());
-      setCreated(true);
     } finally {
       setLoading(false);
     }
@@ -140,32 +136,6 @@ const CreateRoom = () => {
           </button>
         </form>
 
-        {created && (
-          <div className="room-summary">
-            <p>Room created successfully!</p>
-            <div className="summary-card">
-              <div>
-                <span>Room</span>
-                <strong>{roomName}</strong>
-              </div>
-              <div>
-                <span>Code</span>
-                <strong>{roomCode}</strong>
-              </div>
-              <div>
-                <span>Language</span>
-                <strong>{language}</strong>
-              </div>
-              <div>
-                <span>Visibility</span>
-                <strong>{visibility}</strong>
-              </div>
-            </div>
-            <button className="secondary-action" type="button" onClick={() => navigate(`/`)}>
-              Go to Home
-            </button>
-          </div>
-        )}
       </div>
     </main>
   );

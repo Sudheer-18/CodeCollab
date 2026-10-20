@@ -176,6 +176,13 @@ public class userController {
     @PostMapping("/api/rooms/join")
     public ResponseEntity<Map<String, Object>> joinRoom(@RequestBody Map<String, String> requestBody,
                                                         @RequestHeader(value = "Authorization", required = false) String authorization) {
+        User joiningUser = authenticatedUser(authorization);
+        if (joiningUser == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Please log in before joining a room");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
         String roomCode = requestBody.get("roomCode");
         if (roomCode == null || roomCode.isBlank()) {
             Map<String, Object> error = new HashMap<>();
@@ -193,16 +200,7 @@ public class userController {
         }
 
 
-        String userIdentifier = "guest";
-        if (authorization != null) {
-            User joiningUser = authenticatedUser(authorization);
-            if (joiningUser == null) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("message", "Your session is invalid or expired. Please log in again.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-            }
-            userIdentifier = joiningUser.getId();
-        }
+        String userIdentifier = joiningUser.getId();
 
         // participants are list of objects { userId, joinedAt }
         List<Map<String, Object>> participants = (List<Map<String, Object>>) room.get("participants");
@@ -352,13 +350,27 @@ public class userController {
     }
 
     @GetMapping("/api/rooms/{roomId}")
-    public ResponseEntity<Map<String, Object>> getRoomById(@PathVariable String roomId) {
+    public ResponseEntity<Map<String, Object>> getRoomById(
+            @PathVariable String roomId,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        User requestingUser = authenticatedUser(authorization);
+        if (requestingUser == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Please log in before opening a room");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
         Query q = new Query(Criteria.where("roomId").is(roomId));
         Map room = mongoTemplate.findOne(q, Map.class, "rooms");
         if (room == null) {
             Map<String, Object> error = new HashMap<>();
             error.put("message", "Room not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+        if (!isRoomMember(room, requestingUser.getId())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Join this room before opening it");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         }
         return ResponseEntity.ok(room);
     }
@@ -527,6 +539,11 @@ public class userController {
             error.put("message", "Room not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         }
+        if (!isRoomMember(room, authenticatedUser.getId())) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Join this room before editing its content");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
 
         // save editorContent and append a history entry with author and timestamp
         String author = authenticatedUser.getId();
@@ -549,6 +566,20 @@ public class userController {
         response.put("editorContent", editorContent);
         response.put("historyEntry", historyEntry);
         return ResponseEntity.ok(response);
+    }
+
+    private boolean isRoomMember(Map room, String userId) {
+        if (userId.equals(room.get("createdBy"))) {
+            return true;
+        }
+        Object participantsValue = room.get("participants");
+        if (!(participantsValue instanceof List<?> participants)) {
+            return false;
+        }
+        return participants.stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .anyMatch(participant -> userId.equals(participant.get("userId")));
     }
 
     private String generateRoomCode(String roomName) {
