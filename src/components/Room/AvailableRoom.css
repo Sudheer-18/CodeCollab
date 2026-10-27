@@ -1,0 +1,154 @@
+.available-rooms-page {
+  min-height: 100vh;
+  padding: 48px 24px;
+  background: linear-gradient(180deg, #f8f8ff 0%, #eef2ff 100%);
+  color: #1a2144;
+}
+
+.available-rooms-panel {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+}
+
+.available-rooms-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+}
+
+.available-rooms-eyebrow {
+  margin: 0 0 10px;
+  color: #5d4dfc;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.available-rooms-header h1 {
+  margin: 0 0 10px;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.available-rooms-header p:last-child {
+  margin: 0;
+  color: #686b8a;
+}
+
+.available-rooms-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.available-back-button,
+.available-create-button,
+.available-join-button {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.available-back-button {
+  background: #e9e7ff;
+  color: #3b30d4;
+}
+
+.available-create-button,
+.available-join-button {
+  background: #5d4dfc;
+  color: #fff;
+}
+
+.available-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+.available-room-card,
+.available-rooms-empty {
+  padding: 24px;
+  border: 1px solid rgba(93, 77, 252, 0.14);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(63, 46, 149, 0.08);
+}
+
+.available-room-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.available-room-card h2,
+.available-rooms-empty h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.available-room-language,
+.available-room-members {
+  color: #686b8a;
+}
+
+.available-room-status {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e8f8ef;
+  color: #25854a;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.available-room-members {
+  margin: 22px 0;
+  font-size: 0.9rem;
+}
+
+.available-join-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.available-rooms-empty {
+  text-align: center;
+}
+
+.available-rooms-empty p,
+.available-rooms-message {
+  color: #686b8a;
+}
+
+.available-rooms-empty .available-create-button {
+  margin-top: 12px;
+}
+
+.available-rooms-error {
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid rgba(216, 68, 102, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 95, 127, 0.1);
+  color: #d84466;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .available-rooms-page {
+    padding: 32px 16px;
+  }
+
+  .available-rooms-header {
+    flex-direction: column;
+  }
+
+  .available-rooms-actions {
+    width: 100%;
+  }
+}
