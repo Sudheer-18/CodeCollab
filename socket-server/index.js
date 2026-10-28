@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -99,3 +100,6 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
   console.log(`Socket server listening on ${PORT}`);
 });
+=======
+require("./src/server");
+>>>>>>> 756de1679ca0efb7ccbb987f619ca511799d9d5a

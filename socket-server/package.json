@@ -9,6 +9,10 @@
   "dependencies": {
     "axios": "^1.5.0",
     "express": "^4.18.2",
+<<<<<<< HEAD
+=======
+    "react_js": "file:..",
+>>>>>>> 756de1679ca0efb7ccbb987f619ca511799d9d5a
     "socket.io": "^4.7.2"
   }
 }

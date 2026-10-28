@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@stomp/stompjs": "^7.5.0",
+=======
+>>>>>>> 756de1679ca0efb7ccbb987f619ca511799d9d5a
     "axios": "^1.15.2",
     "chart.js": "^4.4.4",
     "face-api.js": "^0.22.2",
@@ -26,7 +29,12 @@
     "react-toastify": "^10.0.6",
     "recharts": "^2.12.7",
     "rsuite": "^5.72.0",
+<<<<<<< HEAD
     "slick-carousel": "^1.8.1"
+=======
+    "slick-carousel": "^1.8.1",
+    "socket.io-client": "^4.8.3"
+>>>>>>> 756de1679ca0efb7ccbb987f619ca511799d9d5a
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

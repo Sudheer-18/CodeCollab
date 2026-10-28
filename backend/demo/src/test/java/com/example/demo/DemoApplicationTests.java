@@ -1,5 +1,6 @@
 package com.example.demo;
 
+<<<<<<< HEAD
 import org.springframework.beans.factory.annotation.Autowired;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,10 +29,19 @@ class DemoApplicationTests {
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 	}
 
+=======
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class DemoApplicationTests {
+
+>>>>>>> 756de1679ca0efb7ccbb987f619ca511799d9d5a
 	@Test
 	void contextLoads() {
 	}
 
+<<<<<<< HEAD
 	@Test
 	void joiningRoomRequiresAuthentication() throws Exception {
 		mockMvc.perform(post("/api/rooms/join")
@@ -46,4 +56,6 @@ class DemoApplicationTests {
 			.andExpect(status().isUnauthorized());
 	}
 
+=======
+>>>>>>> 756de1679ca0efb7ccbb987f619ca511799d9d5a
 }
