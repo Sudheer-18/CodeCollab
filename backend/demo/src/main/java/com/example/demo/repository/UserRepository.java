@@ -1,9 +1,10 @@
-package com.example.demo.repository;
+package com.example.demo.Repository;
 
-import com.example.demo.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepository extends MongoRepository<User, String> {
+import com.example.demo.Model.User;
+
+public interface UserRepository extends MongoRepository<User,String> {
     User findByEmail(String email);
     User findByEmailAndPassword(String email, String password);
 }
