@@ -11,6 +11,7 @@ import com.example.demo.dto.ApiResult;
 import com.example.demo.model.User;
 import com.example.demo.repository.RoomRepository;
 import com.example.demo.repository.UserActivityRepository;
+import com.example.demo.services.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,14 @@ public class RoomService {
     private final RoomRepository rooms;
     private final UserActivityRepository userActivity;
     private final UserService users;
+    private final JwtService jwtService;
 
-    public RoomService(RoomRepository rooms, UserActivityRepository userActivity, UserService users) {
+    public RoomService(RoomRepository rooms, UserActivityRepository userActivity, UserService users,
+            JwtService jwtService) {
         this.rooms = rooms;
         this.userActivity = userActivity;
         this.users = users;
+        this.jwtService = jwtService;
     }
 
     public ApiResult<Map<String, Object>> createRoom(Map<String, String> request, String authorization) {
@@ -149,8 +153,9 @@ public class RoomService {
 
     private User authenticatedUser(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) return null;
-        String userId = authorization.substring(7).trim();
-        return userId.isEmpty() ? null : users.findById(userId);
+        String userId = jwtService.getUserId(authorization.substring(7).trim());
+        if (userId == null || userId.isEmpty()) return null;
+        return users.findById(userId);
     }
 
     private List<Map<String, Object>> participants(Object value) {
