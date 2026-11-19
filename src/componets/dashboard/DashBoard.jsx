@@ -61,7 +61,7 @@ const DashBoard = () => {
       });
     } catch (err) {
       console.error("Dashboard error:", err);
-      setError(err.message || "Failed to load dashboard. Make sure backend is running at localhost:5000");
+      setError(err.message || "Failed to load dashboard. Please try again later.");
     } finally {
       setLoading(false);
     }

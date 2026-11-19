@@ -26,7 +26,9 @@ $env:JWT_SECRET = "replace-with-a-random-secret-at-least-32-characters"
 .\mvnw.cmd spring-boot:run
 ```
 
-The backend defaults to port `5000`; the Socket.IO service defaults to port `5001`. Set `VITE_API_URL` and `VITE_SOCKET_URL` in a local `.env` file to override the frontend endpoints. Set `BACKEND_URL` to override the backend URL used by the socket service. Do not commit credentials.
+Production frontend builds use `https://codecollab-1-stj1.onrender.com` for API requests and allow the frontend origin `https://code-collab-dun-three.vercel.app` for backend WebSockets. The backend defaults to port `5000`; the Socket.IO service defaults to port `5001`.
+
+The Socket.IO service must be deployed separately from the Spring API. Set `VITE_SOCKET_URL` in the Vercel project to that service's public URL, `BACKEND_URL` on the socket service to the Spring API URL, and `SOCKET_ALLOWED_ORIGINS` to `https://code-collab-dun-three.vercel.app`. `VITE_API_URL` and `WEBSOCKET_ALLOWED_ORIGINS` can override the frontend API and backend WebSocket origin. For local development, the API defaults to `http://localhost:5000`; use local environment overrides as needed. Do not commit credentials.
 
 ## Validation
 
