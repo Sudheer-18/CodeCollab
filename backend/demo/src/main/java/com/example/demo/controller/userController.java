@@ -1,4 +1,4 @@
-package com.example.demo.Controller;
+package com.example.demo.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.example.demo.Model.User;
+import com.example.demo.model.User;
 import com.example.demo.services.JwtService;
 import com.example.demo.services.UserSeeervice;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +101,6 @@ public class userController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/api/rooms/create")
     public ResponseEntity<Map<String, Object>> createRoom(@RequestBody Map<String, String> roomData,
                                                           @RequestHeader(value = "Authorization", required = false) String authorization) {
         String roomName = roomData.get("roomName");
@@ -173,7 +172,6 @@ public class userController {
         return userId == null || userId.isEmpty() ? null : userService.findById(userId);
     }
 
-    @PostMapping("/api/rooms/join")
     public ResponseEntity<Map<String, Object>> joinRoom(@RequestBody Map<String, String> requestBody,
                                                         @RequestHeader(value = "Authorization", required = false) String authorization) {
         User joiningUser = authenticatedUser(authorization);
@@ -263,7 +261,6 @@ public class userController {
         return ResponseEntity.ok(response);
     }
 
-    @org.springframework.web.bind.annotation.GetMapping("/api/dashboard/stats")
     public ResponseEntity<Map<String, Object>> dashboardStats(@RequestHeader(value = "Authorization", required = false) String authorization) {
         User dashboardUser = authenticatedUser(authorization);
         if (dashboardUser == null) {
@@ -349,7 +346,6 @@ public class userController {
         return ResponseEntity.ok(resp);
     }
 
-    @GetMapping("/api/rooms/{roomId}")
     public ResponseEntity<Map<String, Object>> getRoomById(
             @PathVariable String roomId,
             @RequestHeader(value = "Authorization", required = false) String authorization) {
@@ -514,7 +510,6 @@ public class userController {
         return runtime;
     }
 
-    @PatchMapping("/api/rooms/{roomId}/content")
     public ResponseEntity<Map<String, Object>> saveRoomContent(@PathVariable String roomId,
                                                                @RequestBody Map<String, String> contentPayload,
                                                                @RequestHeader(value = "Authorization", required = false) String authorization) {

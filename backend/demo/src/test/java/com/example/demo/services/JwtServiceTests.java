@@ -12,8 +12,10 @@ class JwtServiceTests {
     @Test
     void acceptsValidTokenAndRejectsTamperedSignature() {
         String token = jwtService.issueToken("user-123");
-        String tamperedToken = token.substring(0, token.length() - 1)
-                + (token.endsWith("a") ? "b" : "a");
+        String[] parts = token.split("\\.");
+        String signature = parts[2];
+        String replacement = signature.charAt(0) == 'a' ? "b" : "a";
+        String tamperedToken = parts[0] + "." + parts[1] + "." + replacement + signature.substring(1);
 
         assertEquals("user-123", jwtService.getUserId(token));
         assertNull(jwtService.getUserId(tamperedToken));
