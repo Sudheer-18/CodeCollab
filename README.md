@@ -18,15 +18,14 @@ npm install
 npm run dev
 ```
 
-Start the backend from `backend/demo` with MongoDB running:
+Start the backend from `backend/demo`. Copy `.env.example` to `.env` and replace its placeholder values with your Atlas URI and a private JWT secret. The real `.env` is ignored by Git; do not commit it.
 
 ```powershell
-$env:MONGODB_URI = "mongodb://localhost:27017/Codecollab"
-$env:JWT_SECRET = "replace-with-a-random-secret-at-least-32-characters"
+Copy-Item .env.example .env
 .\mvnw.cmd spring-boot:run
 ```
 
-The frontend uses `https://codecollab-1-stj1.onrender.com` for API requests in all environments and allows the frontend origin `https://code-collab-dun-three.vercel.app` for backend WebSockets. The backend defaults to port `5000`; the Socket.IO service defaults to port `5001`.
+The frontend uses `https://codecollab-1-stj1.onrender.com` for API requests in all environments and allows the frontend origin `https://code-collab-dun-three.vercel.app` for backend WebSockets. In Render, set `MONGODB_URI` to your Atlas connection string and `JWT_SECRET` to a private random secret of at least 32 characters in the service Environment settings. Enter each value directly—do not put `${...}` around them or commit them to source. The backend requires a MongoDB URI and has no localhost fallback. The backend defaults to port `5000`; the Socket.IO service defaults to port `5001`.
 
 The Socket.IO service must be deployed separately from the Spring API. Set `VITE_SOCKET_URL` in the Vercel project to that service's public URL, `BACKEND_URL` on the socket service to the Spring API URL, and `SOCKET_ALLOWED_ORIGINS` to `https://code-collab-dun-three.vercel.app`. Without `VITE_SOCKET_URL`, production room pages skip the Socket.IO connection rather than trying localhost. `VITE_WS_URL` and `WEBSOCKET_ALLOWED_ORIGINS` can override the Spring WebSocket address and origin. Do not commit credentials.
 
