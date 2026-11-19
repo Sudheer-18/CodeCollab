@@ -26,9 +26,9 @@ $env:JWT_SECRET = "replace-with-a-random-secret-at-least-32-characters"
 .\mvnw.cmd spring-boot:run
 ```
 
-Production frontend builds use `https://codecollab-1-stj1.onrender.com` for API requests and allow the frontend origin `https://code-collab-dun-three.vercel.app` for backend WebSockets. The backend defaults to port `5000`; the Socket.IO service defaults to port `5001`.
+The frontend uses `https://codecollab-1-stj1.onrender.com` for API requests in all environments and allows the frontend origin `https://code-collab-dun-three.vercel.app` for backend WebSockets. The backend defaults to port `5000`; the Socket.IO service defaults to port `5001`.
 
-The Socket.IO service must be deployed separately from the Spring API. Set `VITE_SOCKET_URL` in the Vercel project to that service's public URL, `BACKEND_URL` on the socket service to the Spring API URL, and `SOCKET_ALLOWED_ORIGINS` to `https://code-collab-dun-three.vercel.app`. `VITE_API_URL` and `WEBSOCKET_ALLOWED_ORIGINS` can override the frontend API and backend WebSocket origin. For local development, the API defaults to `http://localhost:5000`; use local environment overrides as needed. Do not commit credentials.
+The Socket.IO service must be deployed separately from the Spring API. Set `VITE_SOCKET_URL` in the Vercel project to that service's public URL, `BACKEND_URL` on the socket service to the Spring API URL, and `SOCKET_ALLOWED_ORIGINS` to `https://code-collab-dun-three.vercel.app`. Without `VITE_SOCKET_URL`, production room pages skip the Socket.IO connection rather than trying localhost. `VITE_WS_URL` and `WEBSOCKET_ALLOWED_ORIGINS` can override the Spring WebSocket address and origin. Do not commit credentials.
 
 ## Validation
 

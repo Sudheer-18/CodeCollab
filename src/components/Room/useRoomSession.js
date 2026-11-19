@@ -5,12 +5,12 @@ import { apiRequest } from "../../services/api";
 
 const SOCKET_URL = (() => {
   if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
-  if (typeof window === "undefined") return "http://localhost:5001";
-  const { protocol, hostname } = window.location;
-  return hostname === "localhost" || hostname === "127.0.0.1" ? "http://localhost:5001" : `${protocol}//${hostname}:5001`;
+  return import.meta.env.PROD ? "" : "http://localhost:5001";
 })();
 
-const SOCKET_STATUS_HINT = "Chat is unavailable while the room connection is offline. Start the socket service with `npm --prefix socket-server start` or check VITE_SOCKET_URL.";
+const SOCKET_STATUS_HINT = import.meta.env.PROD
+  ? "Live chat is not configured. Set VITE_SOCKET_URL to the deployed Socket.IO service URL."
+  : "Chat is unavailable while the room connection is offline. Start the socket service with `npm --prefix socket-server start` or check VITE_SOCKET_URL.";
 
 export default function useRoomSession() {
   const { id } = useParams();
@@ -71,6 +71,13 @@ export default function useRoomSession() {
     setLoading(true);
     setError("");
     fetchRoom();
+    if (!SOCKET_URL) {
+      setSocketError(SOCKET_STATUS_HINT);
+      return () => {
+        [saveTimeout.current, emitTimeout.current, typingTimer.current].forEach((timer) => timer && window.clearTimeout(timer));
+      };
+    }
+
     const socket = io(SOCKET_URL, {
       reconnection: true,
       reconnectionAttempts: 10,
