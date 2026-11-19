@@ -42,8 +42,9 @@ public class RoomController {
     }
 
     @GetMapping("/api/rooms/{roomId}")
-    public ResponseEntity<?> find(@PathVariable String roomId) {
-        return response(rooms.findRoom(roomId));
+    public ResponseEntity<?> find(@PathVariable String roomId,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        return response(rooms.findRoom(roomId, authorization));
     }
 
     @PatchMapping("/api/rooms/{roomId}/content")

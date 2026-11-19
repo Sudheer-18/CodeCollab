@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./Room.css";
 import "./CreateRoom.css";
@@ -33,7 +33,7 @@ const Room = () => {
   const [runResult, setRunResult] = useState(null);
   const [stdin, setStdin] = useState("");
 
-  const fetchRoom = async () => {
+  const fetchRoom = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
@@ -90,7 +90,7 @@ const Room = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, localKey, navigate]);
 
   useEffect(() => {
     // initial fetch once; further updates come from socket events
@@ -166,10 +166,12 @@ const Room = () => {
             socketRef.current.publish({ destination: `/app/rooms/${id}/leave`, body: "{}" });
           }
           socketRef.current.deactivate();
-        } catch {}
+        } catch (error) {
+          console.error("Could not close room socket", error);
+        }
       }
     };
-  }, [id]);
+  }, [fetchRoom, id, localKey]);
 
   // chat and UI state
   const [messages, setMessages] = useState([]);
@@ -231,7 +233,9 @@ const Room = () => {
             destination: `/app/rooms/${id}/editor`,
             body: JSON.stringify({ content: value }),
           });
-        } catch (e) {}
+        } catch (error) {
+          console.error("Could not publish editor update", error);
+        }
       });
     }, 1000);
 
@@ -243,7 +247,9 @@ const Room = () => {
           destination: `/app/rooms/${id}/editor`,
           body: JSON.stringify({ content: value }),
         });
-      } catch (e) {}
+      } catch (error) {
+        console.error("Could not publish editor update", error);
+      }
     }, 300);
   };
 
@@ -358,7 +364,7 @@ const Room = () => {
                 <div className="editor-toolbar">
                   <div>
                     <strong>{room.language}</strong>
-                    <span>Run this room's code in a sandbox</span>
+                    <span>Run this room&apos;s code in a sandbox</span>
                   </div>
                   <button className="submit-button run-code-button" onClick={handleRunCode} disabled={runLoading}>
                     {runLoading ? "Running..." : "Run Code"}

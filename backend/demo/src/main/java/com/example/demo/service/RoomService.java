@@ -64,11 +64,13 @@ public class RoomService {
     public ApiResult<Map<String, Object>> joinRoom(Map<String, String> request, String authorization) {
         String roomCode = request == null ? null : request.get("roomCode");
         if (roomCode == null || roomCode.isBlank()) return error(HttpStatus.BAD_REQUEST, "Room code is required");
+        User user = authenticatedUser(authorization);
+        if (user == null) return error(HttpStatus.UNAUTHORIZED, "Please log in before joining a room");
+
         Map<String, Object> room = rooms.findByRoomCode(roomCode);
         if (room == null) return error(HttpStatus.NOT_FOUND, "Room not found");
 
-        String userId = authorization != null && authorization.startsWith("Bearer ")
-                ? authorization.substring(7) : "guest";
+        String userId = user.getId();
         List<Map<String, Object>> participants = participants(room.get("participants"));
         boolean alreadyJoined = participants.stream().anyMatch(participant -> userId.equals(participant.get("userId")));
         if (!alreadyJoined && participants.size() >= MAX_ROOM_PARTICIPANTS) {
@@ -116,7 +118,10 @@ public class RoomService {
         return available;
     }
 
-    public ApiResult<Map<String, Object>> findRoom(String roomId) {
+    public ApiResult<Map<String, Object>> findRoom(String roomId, String authorization) {
+        if (authenticatedUser(authorization) == null) {
+            return error(HttpStatus.UNAUTHORIZED, "Please log in to view this room");
+        }
         Map<String, Object> room = rooms.findByRoomId(roomId);
         return room == null ? error(HttpStatus.NOT_FOUND, "Room not found") : ApiResult.ok(room);
     }

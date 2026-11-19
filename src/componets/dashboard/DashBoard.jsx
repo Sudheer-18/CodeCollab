@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./DashBoard.css";
 import { API_BASE_URL } from "../../api.js";
@@ -23,11 +23,7 @@ const DashBoard = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
       const userData = JSON.parse(localStorage.getItem("user"));
@@ -69,7 +65,11 @@ const DashBoard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleProfileSave = async (event) => {
     event.preventDefault();
