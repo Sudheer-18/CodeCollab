@@ -1,0 +1,603 @@
+{
+  "schema": "clarification-questions/v1",
+  "generated_at": "2026-10-27T16:52:13.7198039Z",
+  "user_input": "Refactor the existing full-stack project in the workspace per the user's request. Start by inspecting the entire relevant frontend/backend folder structures and project manifests/configs, understand current routes, API contracts, auth, persistence, and business behavior, and form a concrete refactoring plan before editing. Then implement the refactor systematically while preserving behavior. Frontend React component files must each be fewer than 100 lines. Keep changes surgical, update related docs if appropriate, and do not commit. Run the smallest relevant frontend/backend validation commands available and report outcomes/limitations. Finish with the updated frontend/backend folder structures, key changes, any file splits/reorganizations, API compatibility, test/build status, and remaining attention items. Bound the work to this repository; if the full requested refactor is too large to safely complete, implement a coherent module-sized slice and explicitly state unfinished areas and next steps rather than claiming completion.",
+  "title": "CodeCollab Full-Stack Refactor",
+  "assessment_snapshot": {
+    "intro": "The workspace contains a React/Vite client, a Spring Boot REST/MongoDB service, and a separate Node.js/Socket.IO collaboration server:",
+    "bullets": [
+      "The React client is on React 18.3.1 with React Router 7.17; routes cover home, login/signup, create/join/available rooms, room editing, and dashboard. Custom CSS is used; RSuite is declared but no source imports were found.",
+      "The Spring Boot 4.1.0 / Java 17 service exposes user login/signup/profile, dashboard stats, and room create/join/list/detail/content REST flows; MongoDB persists user and room data. The Node socket server listens separately and relays room presence, editor changes/restores, and chat.",
+      "The client stores an auth token/user and recent-room/editor state in localStorage; the socket server tracks connected participants in memory. No UI screenshots or design-system reference were provided. The root package has a build script but no test script; a Maven test source exists."
+    ]
+  },
+  "proposed_outcome": "Perform a surgical, in-place modular refactor of the existing React/Vite frontend, Spring Boot/MongoDB REST backend, and Node.js/Socket.IO server. Keep current routes, REST/socket contracts, persistence and user-visible behavior compatible; keep every frontend React component file below 100 lines, validate with the smallest available checks, document remaining work, and do not commit.",
+  "scope": [
+    "frontend",
+    "backend",
+    "generic"
+  ],
+  "status": "answered",
+  "questions": [
+    {
+      "id": "F1",
+      "kit": "frontend",
+      "field": "target.framework",
+      "title": "Frontend framework",
+      "question": "Which frontend framework and version should the refactored client target? The manifest currently uses React 18.3.1.",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "React 18.3.1",
+      "default": null,
+      "prefilled": true,
+      "prefilled_value": "React 18.3.1",
+      "answer": {
+        "value": "React 18.3.1",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "React 18.3.1",
+          "label": "React 18.3.1 (current)"
+        },
+        {
+          "value": "React 19",
+          "label": "React 19"
+        },
+        {
+          "value": "Vue 3",
+          "label": "Vue 3"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F2",
+      "kit": "frontend",
+      "field": "target.component_library",
+      "title": "UI component library",
+      "question": "What component/UI library should the refactored frontend use? Current UI source uses custom React/CSS; RSuite is declared but no imports were found.",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "No component library; preserve custom React/CSS",
+      "default": null,
+      "prefilled": true,
+      "prefilled_value": "No component library; preserve custom React/CSS",
+      "answer": {
+        "value": "No component library; preserve custom React/CSS",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "No component library; preserve custom React/CSS",
+          "label": "No component library; preserve custom React/CSS (current source pattern)"
+        },
+        {
+          "value": "RSuite 5",
+          "label": "RSuite 5 (declared dependency, currently unused in source)"
+        },
+        {
+          "value": "MUI",
+          "label": "Material UI (MUI)"
+        },
+        {
+          "value": "shadcn/ui",
+          "label": "shadcn/ui"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F3",
+      "kit": "frontend",
+      "field": "visual.screenshots",
+      "title": "Current UI references",
+      "question": "Provide paths or URLs for screenshots/screen recordings of the existing UI to preserve during the refactor, or say none are available.",
+      "importance": "required",
+      "impact": 4,
+      "recommended": null,
+      "default": null,
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": null,
+        "source": "skipped"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "F4",
+      "kit": "frontend",
+      "field": "visual.design_system",
+      "title": "Design system",
+      "question": "What design system, brand tokens, or visual reference should guide the refactor? You may identify existing source files or specify that the current appearance should be preserved.",
+      "importance": "required",
+      "impact": 4,
+      "recommended": null,
+      "default": "match existing pixel-by-pixel using extracted CSS custom properties",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "match existing pixel-by-pixel using extracted CSS custom properties",
+        "source": "default"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "F5",
+      "kit": "frontend",
+      "field": "compliance.accessibility",
+      "title": "Accessibility target",
+      "question": "What accessibility standard should the refactored frontend meet?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": "WCAG 2.1 AA",
+      "default": "WCAG 2.1 AA",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "WCAG 2.1 AA",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "WCAG 2.1 AA",
+          "label": "WCAG 2.1 AA"
+        },
+        {
+          "value": "WCAG 2.2 AA",
+          "label": "WCAG 2.2 AA"
+        },
+        {
+          "value": "Section 508",
+          "label": "Section 508"
+        },
+        {
+          "value": "None / not required",
+          "label": "None / not required"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F6",
+      "kit": "frontend",
+      "field": "compatibility.browsers",
+      "title": "Browser targets",
+      "question": "Which browsers/runtime versions must remain supported?",
+      "importance": "recommended",
+      "impact": 2,
+      "recommended": "Modern evergreen (latest 2 major versions)",
+      "default": "modern evergreen (Chrome, Firefox, Safari, Edge — latest 2 major versions)",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "modern evergreen (Chrome, Firefox, Safari, Edge — latest 2 major versions)",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Modern evergreen (latest 2 major versions)",
+          "label": "Modern evergreen browsers (latest 2 major versions)"
+        },
+        {
+          "value": "Current production browser matrix",
+          "label": "Current production browser matrix"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F7",
+      "kit": "frontend",
+      "field": "responsive.breakpoints",
+      "title": "Responsive strategy",
+      "question": "What responsive layout or breakpoint strategy should be preserved or targeted?",
+      "importance": "recommended",
+      "impact": 2,
+      "recommended": "Mobile-first using existing breakpoints",
+      "default": "mobile-first using existing breakpoints detected from codebase",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "mobile-first using existing breakpoints detected from codebase",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Mobile-first using existing breakpoints",
+          "label": "Mobile-first using existing breakpoints"
+        },
+        {
+          "value": "Desktop-first",
+          "label": "Desktop-first"
+        },
+        {
+          "value": "Match current layout",
+          "label": "Match the current layout"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F8",
+      "kit": "frontend",
+      "field": "i18n.locales",
+      "title": "Locales in scope",
+      "question": "Which locales/languages should remain in scope?",
+      "importance": "optional",
+      "impact": 1,
+      "recommended": null,
+      "default": "preserve current locales; keep existing i18n library if present",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "preserve current locales; keep existing i18n library if present",
+        "source": "default"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "F9",
+      "kit": "frontend",
+      "field": "state_mgmt.preference",
+      "title": "Client state management",
+      "question": "What client-side state-management approach should the refactor use?",
+      "importance": "optional",
+      "impact": 2,
+      "recommended": "Preserve current component state and localStorage pattern",
+      "default": "preserve existing pattern if identifiable; otherwise recommend minimal (component state + server-state library)",
+      "prefilled": true,
+      "prefilled_value": "Preserve current component state and localStorage pattern",
+      "answer": {
+        "value": "Preserve current component state and localStorage pattern",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Preserve current component state and localStorage pattern",
+          "label": "Preserve current component state and localStorage pattern"
+        },
+        {
+          "value": "Redux Toolkit",
+          "label": "Redux Toolkit"
+        },
+        {
+          "value": "Zustand",
+          "label": "Zustand"
+        },
+        {
+          "value": "Server state only",
+          "label": "Server state only"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "F10",
+      "kit": "frontend",
+      "field": "routing.preference",
+      "title": "Frontend routing",
+      "question": "Which routing strategy should the refactor preserve/use? The client currently uses React Router 7.17.",
+      "importance": "optional",
+      "impact": 2,
+      "recommended": "React Router 7.17",
+      "default": "use the de-facto router for the chosen target framework",
+      "prefilled": true,
+      "prefilled_value": "React Router 7.17",
+      "answer": {
+        "value": "React Router 7.17",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "React Router 7.17",
+          "label": "React Router 7.17 (current)"
+        },
+        {
+          "value": "Preserve current URL paths; implementation flexible",
+          "label": "Preserve current URL paths; implementation flexible"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "B1",
+      "kit": "backend",
+      "field": "target.framework",
+      "title": "Backend frameworks",
+      "question": "Which backend frameworks and versions should the refactor target? The current stack is Spring Boot 4.1.0 / Java 17 plus a Node.js/Express 4.x Socket.IO server.",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "Preserve Spring Boot 4.1.0 / Java 17 and Node.js/Express 4.x with Socket.IO",
+      "default": null,
+      "prefilled": true,
+      "prefilled_value": "Preserve Spring Boot 4.1.0 / Java 17 and Node.js/Express 4.x with Socket.IO",
+      "answer": {
+        "value": "Preserve Spring Boot 4.1.0 / Java 17 and Node.js/Express 4.x with Socket.IO",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Preserve Spring Boot 4.1.0 / Java 17 and Node.js/Express 4.x with Socket.IO",
+          "label": "Preserve the current Spring Boot REST + Node.js/Socket.IO split"
+        },
+        {
+          "value": "Spring Boot only",
+          "label": "Spring Boot only"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "B2",
+      "kit": "backend",
+      "field": "api.contract_preservation",
+      "title": "API compatibility",
+      "question": "What compatibility policy should apply to existing REST and Socket.IO contracts?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": "must preserve",
+      "default": "must preserve",
+      "prefilled": true,
+      "prefilled_value": "must preserve",
+      "answer": {
+        "value": "must preserve",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "must preserve",
+          "label": "Must preserve existing routes, payloads, and status-code behavior"
+        },
+        {
+          "value": "can break with versioning",
+          "label": "Breaking changes may be introduced with a new API version"
+        },
+        {
+          "value": "can break",
+          "label": "Breaking changes are acceptable"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "B3",
+      "kit": "backend",
+      "field": "data.migration_strategy",
+      "title": "Data migration",
+      "question": "Should this structural refactor change or migrate existing MongoDB data/schema?",
+      "importance": "required",
+      "impact": 4,
+      "recommended": "no migration",
+      "default": "TBD / assess in research phase",
+      "prefilled": true,
+      "prefilled_value": "no migration",
+      "answer": {
+        "value": "no migration",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "no migration",
+          "label": "No migration; preserve current MongoDB data/schema"
+        },
+        {
+          "value": "in-place",
+          "label": "In-place schema changes"
+        },
+        {
+          "value": "dual-write",
+          "label": "Dual-write to a new schema"
+        },
+        {
+          "value": "new schema",
+          "label": "New schema with ETL"
+        },
+        {
+          "value": "TBD / assess in research phase",
+          "label": "Defer the decision to research"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "B4",
+      "kit": "backend",
+      "field": "auth.framework",
+      "title": "Authentication policy",
+      "question": "What authentication/authorization mechanism should the refactor preserve or adopt? Current client auth state is stored in localStorage and sent as a bearer-style token.",
+      "importance": "recommended",
+      "impact": 4,
+      "recommended": "Preserve existing auth behavior",
+      "default": "preserve existing auth mechanism; detect from codebase",
+      "prefilled": true,
+      "prefilled_value": "Preserve existing auth behavior",
+      "answer": {
+        "value": "Preserve existing auth behavior",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "Preserve existing auth behavior",
+          "label": "Preserve existing auth behavior/mechanism"
+        },
+        {
+          "value": "JWT with existing claims",
+          "label": "JWT with existing claims"
+        },
+        {
+          "value": "Other",
+          "label": "Other"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "B5",
+      "kit": "backend",
+      "field": "nfr.sla",
+      "title": "Service-level targets",
+      "question": "What latency, throughput, availability, or other service-level targets should the refactor preserve?",
+      "importance": "recommended",
+      "impact": 2,
+      "recommended": null,
+      "default": "match current production baseline; no regression",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "match current production baseline; no regression",
+        "source": "default"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "G1",
+      "kit": "generic",
+      "field": "success.definition",
+      "title": "Definition of done",
+      "question": "Confirm the success criteria: preserve current behavior and API compatibility, keep each React component file below 100 lines, validate the available build/tests, and report any unfinished areas. Is anything missing?",
+      "importance": "required",
+      "impact": 5,
+      "recommended": null,
+      "default": "feature parity with the current system; all existing user-facing behaviors preserved",
+      "prefilled": true,
+      "prefilled_value": "Preserve current user-visible behavior and APIs; every React component file must be fewer than 100 lines; perform available frontend/backend validation, report limitations and remaining work, keep changes surgical, and do not commit.",
+      "answer": {
+        "value": "Preserve current user-visible behavior and APIs; every React component file must be fewer than 100 lines; perform available frontend/backend validation, report limitations and remaining work, keep changes surgical, and do not commit.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "G2",
+      "kit": "generic",
+      "field": "out_of_scope",
+      "title": "Scope exclusions",
+      "question": "Are any modules, behaviors, or changes explicitly out of scope beyond the repository boundary and no-commit instruction?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": null,
+      "default": "no explicit exclusions; agent will infer from project structure",
+      "prefilled": true,
+      "prefilled_value": "New features, behavior/API changes, stack changes, and work outside this repository are out of scope; do not commit.",
+      "answer": {
+        "value": "New features, behavior/API changes, stack changes, and work outside this repository are out of scope; do not commit.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    },
+    {
+      "id": "G3",
+      "kit": "generic",
+      "field": "existing_tests.posture",
+      "title": "Existing test policy",
+      "question": "How should existing tests be treated if a check fails?",
+      "importance": "recommended",
+      "impact": 3,
+      "recommended": "must pass",
+      "default": "must pass",
+      "prefilled": false,
+      "prefilled_value": null,
+      "answer": {
+        "value": "must pass",
+        "source": "user"
+      },
+      "depends_on": null,
+      "options": [
+        {
+          "value": "must pass",
+          "label": "Must pass; no regressions"
+        },
+        {
+          "value": "can rewrite",
+          "label": "May be rewritten with equivalent coverage"
+        },
+        {
+          "value": "ignore",
+          "label": "Ignore outdated/broken tests and create new coverage"
+        },
+        {
+          "value": "partial",
+          "label": "Partial policy; specify which suites"
+        }
+      ],
+      "allow_other": true,
+      "type": "single_select"
+    },
+    {
+      "id": "G5",
+      "kit": "generic",
+      "field": "constraints.additional",
+      "title": "Additional constraints",
+      "question": "Any additional requirements, exclusions, dependencies, compliance rules, or operational constraints not covered above?",
+      "importance": "optional",
+      "impact": 2,
+      "recommended": null,
+      "default": "None beyond the decisions listed in this specification.",
+      "prefilled": true,
+      "prefilled_value": "None beyond the decisions listed in this specification.",
+      "answer": {
+        "value": "None beyond the decisions listed in this specification.",
+        "source": "user"
+      },
+      "depends_on": null,
+      "type": "text",
+      "options": []
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+project:
+  scope_path: "."
+  loc: 1655
+  languages: [JavaScript, JSX]
+  git: false
+  structure:
+    src: "React/Vite frontend application"
+    backend: "Backend project area (implementation details to be confirmed)"
+    socket-server: "Socket server entrypoint"
+    public: "Static public assets"
+  notes: "Small full-stack JavaScript project; relevant source scan excludes dependencies and generated output."
+
+assessment:
+  change_type: upgrade
+  rationale: |
+    The request is a structural refactor of the existing React/JavaScript full-stack
+    application, with behavior and API compatibility explicitly required. No cross-stack
+    migration or service extraction was requested; treat this as an in-place refactor
+    within the existing stack.
+  transformations:
+    - fromStack: "React/Vite frontend and JavaScript server components"
+      fromStackVersion: "to be confirmed from project manifests"
+      toStack: "React/Vite frontend and JavaScript server components"
+      toStackVersion: "no stack/version change requested"
+  grouping_needed: false
+  deep_planning: undecided
+
+progress_sync:
+  run_id: "38e10c2b-7d15-47ab-92ba-90748e28c6d9"
+  grouping_mode: none
+  execution_mode: none
+  plan_start_time: "2026-10-27T16:14:41Z"
+  plan_completed_time: null
+  execution_start_time: null
+  execution_completed_time: null
+  validation_start_time: null
+  validation_completed_time: null
+  total_phases: 0
+  completed_phases: 0
+  total_modules: 3
+  completed_modules: 0
+  total_tasks: 0
+  completed_tasks: 0
+  total_commits: 0
+  build_verified: false
+  test_verified: false
