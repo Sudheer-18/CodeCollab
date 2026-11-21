@@ -22,13 +22,11 @@ public class JsonPlaceholderPoller {
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final URI usersUri;
 
     public JsonPlaceholderPoller(
-            ObjectMapper objectMapper,
             @Value("${jsonplaceholder.users-url:https://jsonplaceholder.typicode.com/users}") URI usersUri) {
-        this.objectMapper = objectMapper;
         this.usersUri = usersUri;
     }
 

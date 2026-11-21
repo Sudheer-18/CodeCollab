@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +28,7 @@ class JsonPlaceholderPollerTest {
 
         try {
             URI usersUri = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/users");
-            JsonPlaceholderPoller poller = new JsonPlaceholderPoller(new ObjectMapper(), usersUri);
+            JsonPlaceholderPoller poller = new JsonPlaceholderPoller(usersUri);
 
             poller.pollUsers();
 
